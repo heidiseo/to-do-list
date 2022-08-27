@@ -1,9 +1,11 @@
 package discord.http
 
+import cats.Applicative
+import cats.data.EitherT
 import cats.effect._
 import cats.implicits._
-import discord.model.DiscordMessage
-import discord.service.DiscordService
+import discord.model.{DiscordMessage, IncomingBadRequest}
+import discord.service.{DiscordService, ResponseHandler}
 import io.circe.generic.auto._
 import org.http4s.{HttpRoutes, _}
 import org.http4s.circe._
@@ -18,13 +20,14 @@ class Route[F[_]: Concurrent](discordService: DiscordService[F]) {
     import dsl._
     implicit val discordMessageDecoder: EntityDecoder[F, DiscordMessage] = jsonOf[F, DiscordMessage]
 
+    val handler = new ResponseHandler[F]
+
     HttpRoutes.of[F] {
-      case req@POST -> Root / "chores" => {
-        for {
-          msg <- req.as[DiscordMessage]
-          _ <- discordService.sendMessage
-          res <- Ok(s"Message - '${msg.content}' has sent to Discord")
-        } yield res
+      case request@POST -> Root / "chores" => {
+        (for {
+          req <- EitherT(request.as[DiscordMessage].attempt.map(_.leftMap(thr => IncomingBadRequest(thr.getMessage))))
+          ss <- EitherT(discordService.sendMessage(req))
+        } yield ss).value
       }
     }
   }
