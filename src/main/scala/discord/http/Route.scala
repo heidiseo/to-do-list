@@ -20,17 +20,14 @@ class Route[F[_]: Concurrent](discordService: DiscordService[F]) {
     import dsl._
     implicit val discordMessageDecoder: EntityDecoder[F, DiscordMessage] = jsonOf[F, DiscordMessage]
 
-    val handler = new ResponseHandler[F]
+    val respHandler = new ResponseHandler[F]
 
     HttpRoutes.of[F] {
-      case request@POST -> Root / "chores" => {
+      case request@POST -> Root / "chores" =>
         (for {
           req <- EitherT(request.as[DiscordMessage].attempt.map(_.leftMap(thr => IncomingBadRequest(thr.getMessage))))
-          ss <- EitherT(discordService.sendMessage(req))
-        } yield ss).value
-      }
+          message <- EitherT(discordService.sendMessage(req))
+        } yield message).value.flatMap(respHandler.handler(_))
     }
   }
-
-  val routeNotFound: HttpApp[F] = choreRoute.orNotFound
 }

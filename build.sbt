@@ -7,6 +7,7 @@ lazy val props = new {
   val catsEffectVersion = "3.3.12"
   val monadicVersion = "0.3.1"
   val catsEffectTestingSpecs2Version = "1.4.0"
+  val scalaTestVersion = "3.2.13"
 }
 
 lazy val root = (project in file(".")).settings(
@@ -20,6 +21,8 @@ lazy val root = (project in file(".")).settings(
     "org.http4s" %% "http4s-circe" % props.http4sVersion,
     "org.http4s" %% "http4s-dsl" % props.http4sVersion,
     "org.http4s" %% "http4s-blaze-server" % props.http4sVersion,
-    "io.circe" %% "circe-generic" % props.circeVersion
+    "io.circe" %% "circe-generic" % props.circeVersion,
+    "org.scalactic" %% "scalactic" % props.scalaTestVersion,
+    "org.scalatest" %% "scalatest" % props.scalaTestVersion % "test"
   )
 )
