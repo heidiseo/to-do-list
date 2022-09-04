@@ -1,23 +1,20 @@
 package discord.http
 
-import cats.Applicative
 import cats.data.EitherT
-import cats.effect._
+import cats.effect.Sync
 import cats.implicits._
 import discord.model.{DiscordMessage, IncomingBadRequest}
 import discord.service.{DiscordService, ResponseHandler}
-import io.circe.generic.auto._
-import org.http4s.{HttpRoutes, _}
-import org.http4s.circe._
+import io.circe.generic.codec.DerivedAsObjectCodec.deriveCodec
+import org.http4s.circe.CirceInstances
+import org.http4s.{EntityDecoder, HttpRoutes}
 import org.http4s.dsl.Http4sDsl
-import org.http4s.implicits._
 
 
-class Route[F[_]: Concurrent](discordService: DiscordService[F]) {
+class Route[F[_]: Sync](discordService: DiscordService[F]) extends CirceInstances with Http4sDsl[F] {
 
   val choreRoute: HttpRoutes[F] = {
-    val dsl = Http4sDsl[F]
-    import dsl._
+
     implicit val discordMessageDecoder: EntityDecoder[F, DiscordMessage] = jsonOf[F, DiscordMessage]
 
     val respHandler = new ResponseHandler[F]

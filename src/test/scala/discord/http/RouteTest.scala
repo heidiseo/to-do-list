@@ -2,44 +2,65 @@ package discord.http
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import discord.model.{DiscordError, DiscordMessage}
+import discord.model.{DiscordError, DiscordMessage, DiscordServiceError}
 import discord.service.DiscordServiceImpl
 import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax.EncoderOps
+import org.http4s.LiteralSyntaxMacros.uri
 import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s._
+import org.http4s.implicits.http4sLiteralsSyntax
 import org.scalatest.funsuite.AnyFunSuite
-
-
+import org.http4s.implicits._
 
 class RouteTest[F[_]] extends TestSuite {
 
+  implicit val discordMessageEntityEncoder: EntityEncoder[IO, Json] = jsonEncoderOf[Json]
+
+  private val discordMessage = DiscordMessage("hello")
+
+  private val discordServiceSuccessful = new DiscordServiceImpl[IO] {
+    override def sendMessage(discordMessage: DiscordMessage): IO[Either[DiscordError, String]] = IO.pure(Right("Message sent to Discord"))
+  }
+
+  private val disCordServiceUnavailable = new DiscordServiceImpl[IO] {
+    override def sendMessage(discordMessage: DiscordMessage): IO[Either[DiscordError, String]] = IO.pure(Left(DiscordServiceError("Discord Service Unavailable")))
+  }
+
   test("successful - message is posted to Discord") {
-    val discordService = new DiscordServiceImpl[IO] {
-      override def sendMessage(discordMessage: DiscordMessage): IO[Either[DiscordError, String]] = IO.pure(Right("Message sent to Discord"))
-    }
 
-    val route = new Route[IO](discordService)
 
-    val discordMessage = DiscordMessage("hello")
-
-    implicit val discordMessageEntityEncoder: EntityEncoder[IO, Json] = jsonEncoderOf[Json]
+    val route = new Route[IO](discordServiceSuccessful)
 
     val response: IO[Response[IO]] = route.choreRoute.orNotFound.run(
-      Request(method = Method.POST, uri = Uri.uri("/chores")).withEntity(discordMessage.asJson)
+      Request(method = Method.POST, uri = uri"/chores").withEntity(discordMessage.asJson)
     )
 
-    assert(check[String](response, Status.Ok, Option("Successful")))
+    assert(check[String](response, Status.Ok, Option("Message sent to Discord")))
   }
 
-  test("fail - incoming message cannot be parsed") {
+  test("fail with Bad Request - incoming message cannot be parsed") {
 
+    val route = new Route[IO](discordServiceSuccessful)
+
+    val response: IO[Response[IO]] = route.choreRoute.orNotFound.run(
+      Request(method = Method.POST, uri = uri"/chores").withEntity("bad incoming body")
+    )
+
+    assert(check[String](response, Status.BadRequest, Option("Unable to parse the request body due to Malformed message body: Invalid JSON")))
   }
 
-  test("fail - Discord service is unavailable") {
+  test("fail with 500 - Discord service is unavailable") {
 
+    val route = new Route[IO](disCordServiceUnavailable)
+
+    val response = route.choreRoute.orNotFound.run(
+      Request(method = Method.POST, uri = uri"/chores").withEntity(discordMessage.asJson)
+    )
+
+    assert(check[String](response, Status.ServiceUnavailable, Option("Discord Service Unavailable")))
   }
 
 }
