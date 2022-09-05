@@ -1,7 +1,7 @@
 package discord.http
 
 import cats.data.EitherT
-import cats.effect.Sync
+import cats.effect.Concurrent
 import cats.implicits._
 import discord.model.{DiscordMessage, IncomingBadRequest}
 import discord.service.{DiscordService, ResponseHandler}
@@ -11,7 +11,7 @@ import org.http4s.{EntityDecoder, HttpRoutes}
 import org.http4s.dsl.Http4sDsl
 
 
-class Route[F[_]: Sync](discordService: DiscordService[F]) extends CirceInstances with Http4sDsl[F] {
+class Route[F[_]: Concurrent](discordService: DiscordService[F]) extends CirceInstances with Http4sDsl[F] {
 
   val choreRoute: HttpRoutes[F] = {
 
