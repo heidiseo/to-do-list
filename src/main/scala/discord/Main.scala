@@ -16,7 +16,7 @@ object Main extends IOApp {
       "v1" -> route.choreRoute
     ).orNotFound
 
-    BlazeServerBuilder[IO](runtime.compute)
+    BlazeServerBuilder[IO]
       .bindHttp(8080, "localhost")
       .withHttpApp(apis)
       .resource
