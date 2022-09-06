@@ -7,13 +7,11 @@ import discord.service.DiscordServiceImpl
 import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax.EncoderOps
-import org.http4s.LiteralSyntaxMacros.uri
-import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
-import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s._
-import org.http4s.implicits.http4sLiteralsSyntax
+import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
+import org.http4s.circe.jsonEncoderOf
+import org.http4s.implicits.{http4sLiteralsSyntax, _}
 import org.scalatest.funsuite.AnyFunSuite
-import org.http4s.implicits._
 
 class RouteTest[F[_]] extends TestSuite {
 
@@ -22,7 +20,7 @@ class RouteTest[F[_]] extends TestSuite {
   private val discordMessage = DiscordMessage("hello")
 
   private val discordServiceSuccessful = new DiscordServiceImpl[IO] {
-    override def sendMessage(discordMessage: DiscordMessage): IO[Either[DiscordError, String]] = IO.pure(Right("Message sent to Discord"))
+    override def sendMessage(discordMessage: DiscordMessage): IO[Either[DiscordError, String]] = IO.pure(Right("Message sent to Discord successfully"))
   }
 
   private val disCordServiceUnavailable = new DiscordServiceImpl[IO] {
@@ -38,7 +36,7 @@ class RouteTest[F[_]] extends TestSuite {
       Request(method = Method.POST, uri = uri"/chores").withEntity(discordMessage.asJson)
     )
 
-    assert(check[String](response, Status.Ok, Option("Message sent to Discord")))
+    assert(check[String](response, Status.Ok, Option("Message sent to Discord successfully")))
   }
 
   test("fail with Bad Request - incoming message cannot be parsed") {

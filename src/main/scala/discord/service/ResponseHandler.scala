@@ -16,10 +16,11 @@ class ResponseHandler[F[_]: Sync] extends Http4sDsl[F] {
 
   def handler[T: Encoder](resp: Either[DiscordError, T]): F[Response[F]] = {
     resp match {
-      case Right(value) => logger.info("successful") *> Ok(value)
-      case Left(err: IncomingBadRequest) => BadRequest(s"Unable to parse the request body due to ${err.getMessage}")
-      case Left(err: DiscordServiceError) => ServiceUnavailable(err.getMessage)
+      case Right(value) => logger.info(value.toString) *> Ok(value)
+      case Left(err: IncomingBadRequest) =>
+        logger.error(s"Message was not sent as the request body couldn't be parsed - ${err.getMessage}") *> BadRequest(s"Unable to parse the request body due to ${err.getMessage}")
+      case Left(err: DiscordServiceError) =>
+        logger.error(s"Message couldn't be sent due to ${err.getMessage}") *> ServiceUnavailable(err.getMessage)
     }
   }
-
 }
