@@ -12,7 +12,7 @@ class DiscordServiceImpl[F[_] : Sync](implicit sttpBackend: SttpBackend[F, Any])
   override def sendMessage(discordMessage: DiscordMessage): F[Either[DiscordError, String]] = {
 
     val response: F[Response[Either[String, String]]] = basicRequest
-      .post(uri"https://discord.com/api/webhooks/934915188770091049/_84SE2gSxp67ciNY3enYdpGb6-Q1osbrMMyXLcNrb2yS_tKUeeeKtU2ObrAJYLaBeWnf")
+      .post(uri"test")
       .contentType("application/json")
       .send(sttpBackend)
 
