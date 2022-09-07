@@ -10,13 +10,13 @@ lazy val props = new {
   val scalaTestVersion = "3.2.13"
   val log4CatsVersion = "2.4.0"
   val logbackVersion = "1.4.0"
+  val sttpVersion = "3.7.6"
 }
 
 lazy val root = (project in file(".")).settings(
   name := "discord-chore",
   libraryDependencies ++= Seq(
     "org.typelevel" %% "cats-effect" % props.catsEffectVersion,
-    "org.typelevel" %% "cats-effect-kernel" % props.catsEffectVersion,
     "org.typelevel" %% "cats-effect-std" % props.catsEffectVersion,
     compilerPlugin("com.olegpy" %% "better-monadic-for" % props.monadicVersion),
     "org.typelevel" %% "cats-effect-testing-specs2" % props.catsEffectTestingSpecs2Version % Test,
@@ -28,6 +28,8 @@ lazy val root = (project in file(".")).settings(
     "org.scalatest" %% "scalatest" % props.scalaTestVersion % "test",
     "org.typelevel" %% "log4cats-core" % props.log4CatsVersion,
     "org.typelevel" %% "log4cats-slf4j" % props.log4CatsVersion,
-    "ch.qos.logback" % "logback-classic" % props.logbackVersion
+    "ch.qos.logback" % "logback-classic" % props.logbackVersion,
+    "com.softwaremill.sttp.client3" %% "core" % props.sttpVersion,
+    "com.softwaremill.sttp.client3" %% "async-http-client-backend-cats" % props.sttpVersion
   )
 )

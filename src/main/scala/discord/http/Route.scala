@@ -1,15 +1,14 @@
 package discord.http
 
 import cats.data.EitherT
-import cats.effect.Concurrent
-import cats.effect.kernel.{Async, Sync}
+import cats.effect.Async
 import cats.syntax.all._
 import discord.model.{DiscordMessage, IncomingBadRequest}
 import discord.service.{DiscordService, ResponseHandler}
 import io.circe.generic.codec.DerivedAsObjectCodec.deriveCodec
 import org.http4s.circe.CirceInstances
-import org.http4s.{EntityDecoder, HttpRoutes}
 import org.http4s.dsl.Http4sDsl
+import org.http4s.{EntityDecoder, HttpRoutes}
 
 
 class Route[F[_] : Async](discordService: DiscordService[F]) extends CirceInstances with Http4sDsl[F] {

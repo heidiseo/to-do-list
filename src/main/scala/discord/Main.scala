@@ -5,22 +5,27 @@ import discord.http.Route
 import discord.service.DiscordServiceImpl
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
+import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
 
 object Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
 
-    val discordService = new DiscordServiceImpl[IO]
-    val route = new Route[IO](discordService)
+    AsyncHttpClientCatsBackend.resource[IO]().use {
+      implicit backend => {
+        val discordService = new DiscordServiceImpl[IO]
+        val route = new Route[IO](discordService)
 
-    val apis = Router(
-      "v1" -> route.choreRoute
-    ).orNotFound
+        val apis = Router(
+          "v1" -> route.choreRoute
+        ).orNotFound
 
-    BlazeServerBuilder[IO]
-      .bindHttp(8080, "localhost")
-      .withHttpApp(apis)
-      .resource
-      .use(_ => IO.never)
-      .as(ExitCode.Success)
+        BlazeServerBuilder[IO]
+          .bindHttp(8080, "localhost")
+          .withHttpApp(apis)
+          .resource
+          .use(_ => IO.never)
+          .as(ExitCode.Success)
+      }
+    }
   }
 }

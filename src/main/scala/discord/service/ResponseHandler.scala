@@ -1,7 +1,7 @@
 package discord.service
 
-import cats.effect.kernel.Sync
 import cats.syntax.all._
+import cats.effect.Sync
 import discord.model.{DiscordError, DiscordServiceError, IncomingBadRequest}
 import io.circe.Encoder
 import org.http4s.Response
