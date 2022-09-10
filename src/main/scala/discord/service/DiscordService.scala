@@ -12,7 +12,8 @@ trait DiscordService[F[_]] {
 
 class DiscordServiceImpl[F[_] : Sync](implicit sttpBackend: SttpBackend[F, Any]) extends DiscordService[F] {
   override def sendMessage[A: Decoder](discordMessage: DiscordMessage, apiClient: ApiClient[F]): F[Either[DiscordError, ResponseMessage]] = {
-    val uri = "https://discord.com/api/webhooks/934915188770091049/_84SE2gSxp67ciNY3enYdpGb6-Q1osbrMMyXLcNrb2yS_tKUeeeKtU2ObrAJYLaBeWnf"
+    val uri = "test"
     apiClient.post[DiscordMessage, ResponseMessage](uri, discordMessage)
   }
 }
+
