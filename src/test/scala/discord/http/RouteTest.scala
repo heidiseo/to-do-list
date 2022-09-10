@@ -2,9 +2,9 @@ package discord.http
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import discord.model.{DiscordError, DiscordMessage, DiscordServiceError}
-import discord.service.DiscordServiceImpl
-import io.circe.Json
+import discord.model.{DiscordError, DiscordMessage, DiscordServiceError, ResponseMessage}
+import discord.service.{ApiClient, DiscordServiceImpl}
+import io.circe.{Decoder, Json}
 import io.circe.generic.auto._
 import io.circe.syntax.EncoderOps
 import org.http4s._
@@ -12,6 +12,11 @@ import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.circe.jsonEncoderOf
 import org.http4s.implicits.{http4sLiteralsSyntax, _}
 import org.scalatest.funsuite.AnyFunSuite
+import sttp.capabilities.WebSockets
+import sttp.client3.impl.cats.implicits.asyncMonadError
+import sttp.client3.testing.SttpBackendStub
+import sttp.monad.MonadAsyncError
+import io.circe.parser.decode
 
 class RouteTest[F[_]] extends TestSuite {
 
@@ -19,12 +24,16 @@ class RouteTest[F[_]] extends TestSuite {
 
   private val discordMessage = DiscordMessage("hello")
 
+  implicit val sttpBackendStub = SttpBackendStub[IO, WebSockets](implicitly[MonadAsyncError[IO]])
+
   private val discordServiceSuccessful = new DiscordServiceImpl[IO] {
-    override def sendMessage(discordMessage: DiscordMessage): IO[Either[DiscordError, String]] = IO.pure(Right("Message sent to Discord successfully"))
+    override def sendMessage[A: Decoder](discordMessage: DiscordMessage, apiClient: ApiClient[F]): IO[Either[DiscordError, A]] =
+      IO.pure(Right("Message sent to Discord successfully"))
   }
 
   private val disCordServiceUnavailable = new DiscordServiceImpl[IO] {
-    override def sendMessage(discordMessage: DiscordMessage): IO[Either[DiscordError, String]] = IO.pure(Left(DiscordServiceError("Discord Service Unavailable")))
+    override def sendMessage[A: Decoder](discordMessage: DiscordMessage, apiClient: ApiClient[F]): F[Either[DiscordError, A]] =
+      IO.pure(Left(DiscordServiceError("Discord Service Unavailable")))
   }
 
   test("successful - message is posted to Discord") {

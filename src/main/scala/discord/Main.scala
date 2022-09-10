@@ -2,7 +2,7 @@ package discord
 
 import cats.effect.{ExitCode, IO, IOApp}
 import discord.http.Route
-import discord.service.DiscordServiceImpl
+import discord.service.{ApiClient, ApiClientImp, DiscordServiceImpl}
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
 import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
@@ -13,7 +13,8 @@ object Main extends IOApp {
     AsyncHttpClientCatsBackend.resource[IO]().use {
       implicit backend => {
         val discordService = new DiscordServiceImpl[IO]
-        val route = new Route[IO](discordService)
+        val apiClient = new ApiClientImp[IO]
+        val route = new Route[IO](discordService, apiClient)
 
         val apis = Router(
           "v1" -> route.choreRoute

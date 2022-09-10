@@ -1,7 +1,7 @@
-package discord.service
+package discord.http
 
-import cats.syntax.all._
 import cats.effect.Sync
+import cats.syntax.all._
 import discord.model.{DiscordError, DiscordServiceError, IncomingBadRequest}
 import io.circe.Encoder
 import org.http4s.Response
@@ -10,7 +10,7 @@ import org.http4s.dsl.Http4sDsl
 import org.typelevel.log4cats.slf4j.loggerFactoryforSync
 import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
 
-class ResponseHandler[F[_]: Sync] extends Http4sDsl[F] {
+class RouteResponseHandler[F[_]: Sync] extends Http4sDsl[F] {
 
   private val logger: SelfAwareStructuredLogger[F] = LoggerFactory[F].getLogger
 

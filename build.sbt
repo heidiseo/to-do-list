@@ -30,6 +30,7 @@ lazy val root = (project in file(".")).settings(
     "org.typelevel" %% "log4cats-slf4j" % props.log4CatsVersion,
     "ch.qos.logback" % "logback-classic" % props.logbackVersion,
     "com.softwaremill.sttp.client3" %% "core" % props.sttpVersion,
-    "com.softwaremill.sttp.client3" %% "async-http-client-backend-cats" % props.sttpVersion
+    "com.softwaremill.sttp.client3" %% "async-http-client-backend-cats" % props.sttpVersion,
+    "com.softwaremill.sttp.client3" %% "circe" % props.sttpVersion
   )
 )
