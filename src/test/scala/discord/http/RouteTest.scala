@@ -2,10 +2,10 @@ package discord.http
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
+import cats.implicits.catsSyntaxEitherId
 import discord.model.{DiscordError, DiscordMessage, DiscordServiceError, ResponseMessage}
-import discord.service.{ApiClient, DiscordServiceImpl}
-import io.circe.{Decoder, Json}
-import io.circe.generic.auto._
+import discord.service.{ApiClient, ApiClientImp, DiscordServiceImpl}
+import io.circe.Json
 import io.circe.syntax.EncoderOps
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
@@ -16,7 +16,6 @@ import sttp.capabilities.WebSockets
 import sttp.client3.impl.cats.implicits.asyncMonadError
 import sttp.client3.testing.SttpBackendStub
 import sttp.monad.MonadAsyncError
-import io.circe.parser.decode
 
 class RouteTest[F[_]] extends TestSuite {
 
@@ -24,33 +23,35 @@ class RouteTest[F[_]] extends TestSuite {
 
   private val discordMessage = DiscordMessage("hello")
 
-  implicit val sttpBackendStub = SttpBackendStub[IO, WebSockets](implicitly[MonadAsyncError[IO]])
+  implicit val sttpBackendStub: SttpBackendStub[IO, WebSockets] = SttpBackendStub[IO, WebSockets](implicitly[MonadAsyncError[IO]])
 
-  private val discordServiceSuccessful = new DiscordServiceImpl[IO] {
-    override def sendMessage[A: Decoder](discordMessage: DiscordMessage, apiClient: ApiClient[F]): IO[Either[DiscordError, A]] =
-      IO.pure(Right("Message sent to Discord successfully"))
+  private val apiClient = new ApiClientImp[IO]
+
+  private val discordServiceSuccessful: DiscordServiceImpl[IO] = new DiscordServiceImpl[IO] {
+    override def sendMessage(discordMessage: DiscordMessage, apiClient: ApiClient[IO]): IO[Either[DiscordError, ResponseMessage]] =
+      IO.pure(ResponseMessage("Message sent to Discord successfully").asRight[DiscordError])
   }
 
-  private val disCordServiceUnavailable = new DiscordServiceImpl[IO] {
-    override def sendMessage[A: Decoder](discordMessage: DiscordMessage, apiClient: ApiClient[F]): F[Either[DiscordError, A]] =
-      IO.pure(Left(DiscordServiceError("Discord Service Unavailable")))
+  private val disCordServiceUnavailable: DiscordServiceImpl[IO] = new DiscordServiceImpl[IO] {
+    override def sendMessage(discordMessage: DiscordMessage, apiClient: ApiClient[IO]): IO[Either[DiscordError, ResponseMessage]] =
+      IO.pure(DiscordServiceError("Discord Service Unavailable").asLeft[ResponseMessage])
   }
 
   test("successful - message is posted to Discord") {
 
 
-    val route = new Route[IO](discordServiceSuccessful)
+    val route = new Route[IO](discordServiceSuccessful, apiClient)
 
     val response: IO[Response[IO]] = route.choreRoute.orNotFound.run(
       Request(method = Method.POST, uri = uri"/chores").withEntity(discordMessage.asJson)
     )
 
-    assert(check[String](response, Status.Ok, Option("Message sent to Discord successfully")))
+    assert(check[ResponseMessage](response, Status.Ok, Option(ResponseMessage("Message sent to Discord successfully"))))
   }
 
   test("fail with Bad Request - incoming message cannot be parsed") {
 
-    val route = new Route[IO](discordServiceSuccessful)
+    val route = new Route[IO](discordServiceSuccessful, apiClient)
 
     val response: IO[Response[IO]] = route.choreRoute.orNotFound.run(
       Request(method = Method.POST, uri = uri"/chores").withEntity("bad incoming body")
@@ -61,7 +62,7 @@ class RouteTest[F[_]] extends TestSuite {
 
   test("fail with 500 - Discord service is unavailable") {
 
-    val route = new Route[IO](disCordServiceUnavailable)
+    val route = new Route[IO](disCordServiceUnavailable, apiClient)
 
     val response = route.choreRoute.orNotFound.run(
       Request(method = Method.POST, uri = uri"/chores").withEntity(discordMessage.asJson)

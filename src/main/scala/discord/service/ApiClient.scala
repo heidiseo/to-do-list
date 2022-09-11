@@ -9,6 +9,7 @@ import sttp.client3.{BodySerializer, DeserializationException, HttpError, Respon
 import cats.syntax.all._
 
 import scala.concurrent.TimeoutException
+import scala.concurrent.duration.DurationInt
 
 trait ApiClient[F[_]] {
   def post[A: BodySerializer, B: Decoder](uri: String, body: A)(implicit sttpBackend: SttpBackend[F, Any]): F[Either[DiscordError, B]]
@@ -22,6 +23,7 @@ class ApiClientImp[F[_] : Sync] extends ApiClient[F] {
       .contentType("application/json")
       .body(body)
       .response(asJson[B])
+      .readTimeout(10.seconds)
       .send(sttpBackend)
       .attempt
       .map(responseHandler)
