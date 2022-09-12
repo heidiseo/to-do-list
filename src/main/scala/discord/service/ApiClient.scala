@@ -1,41 +1,45 @@
 package discord.service
 
 import cats.effect.Sync
+import cats.syntax.all._
 import discord.model.{DiscordDeserialisationError, DiscordError, DiscordHttpError, DiscordServiceTimeout}
 import io.circe
 import io.circe.Decoder
+import org.typelevel.log4cats.slf4j.loggerFactoryforSync
+import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
 import sttp.client3.circe.asJson
 import sttp.client3.{BodySerializer, DeserializationException, HttpError, Response, ResponseException, SttpBackend, UriContext, basicRequest}
-import cats.syntax.all._
 
 import scala.concurrent.TimeoutException
-import scala.concurrent.duration.DurationInt
 
 trait ApiClient[F[_]] {
   def post[A: BodySerializer, B: Decoder](uri: String, body: A)(implicit sttpBackend: SttpBackend[F, Any]): F[Either[DiscordError, B]]
 }
 
 class ApiClientImp[F[_] : Sync] extends ApiClient[F] {
+
+  private val logger: SelfAwareStructuredLogger[F] = LoggerFactory[F].getLogger
+
   override def post[A: BodySerializer, B: Decoder](uri: String, body: A)(implicit sttpBackend: SttpBackend[F, Any]): F[Either[DiscordError, B]] = {
 
-    val response: F[Either[DiscordError, B]] = basicRequest
-      .post(uri"$uri")
-      .contentType("application/json")
-      .body(body)
-      .response(asJson[B])
-      .readTimeout(10.seconds)
-      .send(sttpBackend)
-      .attempt
-      .map(responseHandler)
-
-    response
+    for {
+      _ <- logger.info(s"Sending a request to $uri")
+      resp <- basicRequest
+        .post(uri"$uri")
+        .contentType("application/json")
+        .body(body)
+        .response(asJson[B])
+        .send(sttpBackend)
+        .attempt
+        .map(responseHandler)
+    } yield resp
   }
 
   def responseHandler[B](resp: Either[Throwable, Response[Either[ResponseException[String, circe.Error], B]]]): Either[DiscordError, B] = {
     resp
       .leftMap {
-        case e: TimeoutException => DiscordServiceTimeout(s"Unable to send message - $e")
-        case e => DiscordHttpError(s"Unable to send message - $e", None)
+        case _: TimeoutException => DiscordServiceTimeout("Unable to send message - service timeout")
+        case e => DiscordHttpError(s"Unable to send the message - ${e.getMessage}", None)
       }
       .flatMap {
         _.body.leftMap {
