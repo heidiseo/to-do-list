@@ -1,5 +1,6 @@
 package discord.service
 
+import cats.data.EitherT
 import cats.effect.Sync
 import discord.model.{DiscordError, DiscordMessage, ResponseMessage}
 import sttp.client3._
@@ -10,9 +11,14 @@ trait DiscordService[F[_]] {
 }
 
 class DiscordServiceImpl[F[_] : Sync](implicit sttpBackend: SttpBackend[F, Any]) extends DiscordService[F] {
-  override def sendMessage(discordMessage: DiscordMessage, apiClient: ApiClient[F]): F[Either[DiscordError, Option[String]]] = {
+  override def sendMessage(discordMessage: DiscordMessage, apiClient: ApiClient[F]): F[Either[DiscordError, ResponseMessage]] = {
     val uri = "https://discord.com/message"
-    apiClient.post[DiscordMessage, Option[String]](uri, discordMessage)
+
+//    for {
+//    sdf <- EitherT(apiClient.post[DiscordMessage, Option[String]](uri, discordMessage))
+//    message = Option.when(sdf.isEmpty)()
+//
+//    } yield
   }
 }
 

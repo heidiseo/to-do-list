@@ -2,7 +2,8 @@ package discord.service
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import discord.model.DiscordMessage
+import cats.implicits.catsSyntaxEitherId
+import discord.model.{DiscordHttpError, DiscordMessage, DiscordServiceError}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import sttp.client3.{StringBody, UriContext}
@@ -27,16 +28,29 @@ class DiscordServiceTest extends AnyFunSuite with Matchers {
           req.body.asInstanceOf[StringBody].s shouldBe "{\"content\":\"hello\"}"
           true
         }
-        .thenRespondWithCode(StatusCode.NoContent)
+        .thenRespond("".asRight, StatusCode.NoContent)
 
     val apiClient = new ApiClientImp[IO]
     val discordService = new DiscordServiceImpl[IO]
     val resp = discordService.sendMessage(discordMessage, apiClient).unsafeRunSync()
-    resp shouldBe Right("hello")
+    resp shouldBe "".asRight
   }
 
-//  test("Fail - message to Discord failed") {
-//    val discordService = new DiscordServiceImpl[IO]
-//
-//  }
+  test("Fail - message to Discord failed") {
+    implicit val sttpBackendTest: SttpBackendStub[IO, Any] =
+      sttpBackendBase
+        .whenRequestMatches { req =>
+          req.uri shouldBe uri"https://discord.com/message"
+          req.method shouldBe Method.POST
+          req.body.asInstanceOf[StringBody].s shouldBe "{\"content\":\"hello\"}"
+          true
+        }
+        .thenRespondServerError()
+
+    val apiClient = new ApiClientImp[IO]
+    val discordService = new DiscordServiceImpl[IO]
+    val Left(resp) = discordService.sendMessage(discordMessage, apiClient).unsafeRunSync()
+    resp shouldBe a[DiscordHttpError]
+
+  }
 }

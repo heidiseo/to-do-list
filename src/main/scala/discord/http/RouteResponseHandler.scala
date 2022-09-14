@@ -2,7 +2,7 @@ package discord.http
 
 import cats.effect.Sync
 import cats.syntax.all._
-import discord.model.{DiscordError, DiscordServiceError, IncomingBadRequest}
+import discord.model.{DiscordError, DiscordHttpError, DiscordServiceError, IncomingBadRequest}
 import io.circe.Encoder
 import org.http4s.Response
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
@@ -16,10 +16,10 @@ class RouteResponseHandler[F[_]: Sync] extends Http4sDsl[F] {
 
   def handler[T: Encoder](resp: Either[DiscordError, T]): F[Response[F]] = {
     resp match {
-      case Right(value) => logger.info(value.toString) *> Ok(value)
+      case Right(value) => logger.info("") *> Ok(value)
       case Left(err: IncomingBadRequest) =>
         logger.error(s"Message was not sent as the request body couldn't be parsed - ${err.getMessage}") *> BadRequest(s"Unable to parse the request body due to ${err.getMessage}")
-      case Left(err: DiscordServiceError) =>
+      case Left(err: DiscordHttpError) =>
         logger.error(s"Message couldn't be sent due to ${err.getMessage}") *> ServiceUnavailable(err.getMessage)
     }
   }

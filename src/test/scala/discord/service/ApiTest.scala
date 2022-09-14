@@ -2,13 +2,15 @@ package discord.service
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
+import cats.implicits.catsSyntaxEitherId
 import discord.model._
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import sttp.client3.impl.cats.implicits.asyncMonadError
 import sttp.client3.testing.SttpBackendStub
-import sttp.client3.{BodySerializer, StringBody, SttpClientException, UriContext, basicRequest}
+import sttp.client3.{BodySerializer, Response, StringBody, SttpClientException, UriContext, basicRequest}
 import sttp.model.Method
+import sttp.model.StatusCode.NoContent
 import sttp.monad.MonadAsyncError
 
 import scala.concurrent.TimeoutException
@@ -25,7 +27,7 @@ class ApiTest[F[_]] extends AnyFunSuite with Matchers {
 
   val uri: String = "https://test.com/test"
 
-  test("Successful response and deserialisation") {
+  test("Successful response with body and deserialisation") {
     implicit val testingBackend: SttpBackendStub[IO, Any] =
       sttpBackendStub
         .whenRequestMatches { req =>
@@ -44,6 +46,23 @@ class ApiTest[F[_]] extends AnyFunSuite with Matchers {
 
     val resp: Either[DiscordError, ResponseMessage] = apiClient.post[DiscordMessage, ResponseMessage](uri, discordMessage).unsafeRunSync()
     resp shouldBe Right(ResponseMessage("Successful"))
+  }
+
+  test("Successful response with no content") {
+    implicit val testingBackend: SttpBackendStub[IO, Any] =
+      sttpBackendStub
+        .whenRequestMatches { req =>
+          req.uri shouldBe uri"$uri"
+          req.method shouldBe Method.POST
+          req.body.asInstanceOf[StringBody].s shouldBe "content=message"
+          true
+        }
+        .thenRespond(Response(None.asRight, NoContent))
+
+    val apiClient = new ApiClientImp[IO]
+
+    val resp: Either[DiscordError, Option[String]] = apiClient.post[DiscordMessage, Option[String]](uri, discordMessage).unsafeRunSync()
+    resp shouldBe Right(None)
   }
 
   test("Successful response but failed to deserialise") {

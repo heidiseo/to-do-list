@@ -3,7 +3,7 @@ package discord.http
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits.catsSyntaxEitherId
-import discord.model.{DiscordError, DiscordMessage, DiscordServiceError, ResponseMessage}
+import discord.model.{DiscordError, DiscordHttpError, DiscordMessage}
 import discord.service.{ApiClient, ApiClientImp, DiscordServiceImpl}
 import io.circe.Json
 import io.circe.syntax.EncoderOps
@@ -28,13 +28,13 @@ class RouteTest[F[_]] extends TestSuite {
   private val apiClient = new ApiClientImp[IO]
 
   private val discordServiceSuccessful: DiscordServiceImpl[IO] = new DiscordServiceImpl[IO] {
-    override def sendMessage(discordMessage: DiscordMessage, apiClient: ApiClient[IO]): IO[Either[DiscordError, ResponseMessage]] =
-      IO.pure(ResponseMessage("Message sent to Discord successfully").asRight[DiscordError])
+    override def sendMessage(discordMessage: DiscordMessage, apiClient: ApiClient[IO]): IO[Either[DiscordError, Option[String]]] =
+      IO.pure(Option("Message sent to Discord successfully").asRight[DiscordError])
   }
 
   private val disCordServiceUnavailable: DiscordServiceImpl[IO] = new DiscordServiceImpl[IO] {
-    override def sendMessage(discordMessage: DiscordMessage, apiClient: ApiClient[IO]): IO[Either[DiscordError, ResponseMessage]] =
-      IO.pure(DiscordServiceError("Discord Service Unavailable").asLeft[ResponseMessage])
+    override def sendMessage(discordMessage: DiscordMessage, apiClient: ApiClient[IO]): IO[Either[DiscordError, Option[String]]] =
+      IO.pure(DiscordHttpError("Discord Service Unavailable").asLeft[Option[String]])
   }
 
   test("successful - message is posted to Discord") {
@@ -46,7 +46,7 @@ class RouteTest[F[_]] extends TestSuite {
       Request(method = Method.POST, uri = uri"/chores").withEntity(discordMessage.asJson)
     )
 
-    assert(check[ResponseMessage](response, Status.Ok, Option(ResponseMessage("Message sent to Discord successfully"))))
+    assert(check[String](response, Status.Ok, Option("Message sent to Discord successfully")))
   }
 
   test("fail with Bad Request - incoming message cannot be parsed") {
@@ -68,7 +68,7 @@ class RouteTest[F[_]] extends TestSuite {
       Request(method = Method.POST, uri = uri"/chores").withEntity(discordMessage.asJson)
     )
 
-    assert(check[String](response, Status.ServiceUnavailable, Option("Discord Service Unavailable")))
+    assert(check[String](response, Status.ServiceUnavailable, Option("Discord Service Unavailable - no status code available")))
   }
 
 }
