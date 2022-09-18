@@ -3,7 +3,7 @@ package discord.service
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits.catsSyntaxEitherId
-import discord.model.{DiscordHttpError, DiscordMessage, DiscordServiceError}
+import discord.model.{DiscordHttpError, DiscordMessage, DiscordServiceError, ResponseMessage}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import sttp.client3.{StringBody, UriContext}
@@ -28,12 +28,12 @@ class DiscordServiceTest extends AnyFunSuite with Matchers {
           req.body.asInstanceOf[StringBody].s shouldBe "{\"content\":\"hello\"}"
           true
         }
-        .thenRespond("".asRight, StatusCode.NoContent)
+        .thenRespondWithCode(StatusCode.NoContent)
 
     val apiClient = new ApiClientImp[IO]
     val discordService = new DiscordServiceImpl[IO]
     val resp = discordService.sendMessage(discordMessage, apiClient).unsafeRunSync()
-    resp shouldBe "".asRight
+    resp shouldBe ResponseMessage("Message successfully delivered.").asRight
   }
 
   test("Fail - message to Discord failed") {

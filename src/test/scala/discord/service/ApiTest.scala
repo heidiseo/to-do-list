@@ -44,7 +44,7 @@ class ApiTest[F[_]] extends AnyFunSuite with Matchers {
 
     val apiClient = new ApiClientImp[IO]
 
-    val resp: Either[DiscordError, ResponseMessage] = apiClient.post[DiscordMessage, ResponseMessage](uri, discordMessage).unsafeRunSync()
+    val resp: Either[DiscordError, ResponseMessage] = apiClient.postWithRespBody[DiscordMessage, ResponseMessage](uri, discordMessage).unsafeRunSync()
     resp shouldBe Right(ResponseMessage("Successful"))
   }
 
@@ -61,7 +61,7 @@ class ApiTest[F[_]] extends AnyFunSuite with Matchers {
 
     val apiClient = new ApiClientImp[IO]
 
-    val resp: Either[DiscordError, Option[String]] = apiClient.post[DiscordMessage, Option[String]](uri, discordMessage).unsafeRunSync()
+    val resp: Either[DiscordError, String] = apiClient.postWithoutRespBody[DiscordMessage](uri, discordMessage).unsafeRunSync()
     resp shouldBe Right(None)
   }
 
@@ -82,7 +82,7 @@ class ApiTest[F[_]] extends AnyFunSuite with Matchers {
 
     val apiClient = new ApiClientImp[IO]
 
-    val Left(resp) = apiClient.post[DiscordMessage, ResponseMessage](uri, discordMessage).unsafeRunSync()
+    val Left(resp) = apiClient.postWithRespBody[DiscordMessage, ResponseMessage](uri, discordMessage).unsafeRunSync()
     resp shouldBe a[DiscordDeserialisationError]
   }
 
@@ -99,7 +99,7 @@ class ApiTest[F[_]] extends AnyFunSuite with Matchers {
 
     val apiClient = new ApiClientImp[IO]
 
-    val Left(resp) = apiClient.post[DiscordMessage, ResponseMessage](uri, discordMessage).unsafeRunSync()
+    val Left(resp) = apiClient.postWithRespBody[DiscordMessage, ResponseMessage](uri, discordMessage).unsafeRunSync()
     resp shouldBe a[DiscordHttpError]
     resp.getMessage shouldBe "Internal server error - 500"
   }
@@ -115,7 +115,7 @@ class ApiTest[F[_]] extends AnyFunSuite with Matchers {
         )
 
     val apiClient = new ApiClientImp[IO]
-    val Left(resp) = apiClient.post[DiscordMessage, ResponseMessage](uri, discordMessage).unsafeRunSync()
+    val Left(resp) = apiClient.postWithoutRespBody[DiscordMessage](uri, discordMessage).unsafeRunSync()
     resp shouldBe a[DiscordHttpError]
     resp.getMessage shouldBe "Unable to send the message - Exception when sending request: POST https://test.com/test - no status code available"
   }
@@ -135,7 +135,7 @@ class ApiTest[F[_]] extends AnyFunSuite with Matchers {
     }
 
     val apiClient = new ApiClientImp[IO]
-    val Left(resp) = apiClient.post[DiscordMessage, ResponseMessage](uri, discordMessage).unsafeRunSync()
+    val Left(resp) = apiClient.postWithoutRespBody[DiscordMessage](uri, discordMessage).unsafeRunSync()
     resp shouldBe a[DiscordServiceTimeout]
     resp.getMessage shouldBe "Unable to send message - service timeout"
   }
