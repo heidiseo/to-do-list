@@ -11,6 +11,7 @@ lazy val props = new {
   val log4CatsVersion = "2.4.0"
   val logbackVersion = "1.4.0"
   val sttpVersion = "3.7.6"
+  val commonsCodecVersion = "1.15"
 }
 
 lazy val root = (project in file(".")).settings(
@@ -31,6 +32,7 @@ lazy val root = (project in file(".")).settings(
     "ch.qos.logback" % "logback-classic" % props.logbackVersion,
     "com.softwaremill.sttp.client3" %% "core" % props.sttpVersion,
     "com.softwaremill.sttp.client3" %% "async-http-client-backend-cats" % props.sttpVersion,
-    "com.softwaremill.sttp.client3" %% "circe" % props.sttpVersion
+    "com.softwaremill.sttp.client3" %% "circe" % props.sttpVersion,
+    "commons-codec" % "commons-codec" % props.commonsCodecVersion
   )
 )
