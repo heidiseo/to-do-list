@@ -2,6 +2,7 @@ package discord
 
 import cats.effect.{ExitCode, IO, IOApp}
 import discord.http.Route
+import discord.model.DiscordConfig
 import discord.service.{ApiClient, ApiClientImp, DiscordServiceImpl}
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
@@ -12,20 +13,24 @@ object Main extends IOApp {
 
     AsyncHttpClientCatsBackend.resource[IO]().use {
       implicit backend => {
-        val discordService = new DiscordServiceImpl[IO]
-        val apiClient = new ApiClientImp[IO]
-        val route = new Route[IO](discordService, apiClient)
+        DiscordConfig.load[IO].flatMap {
+          config => {
+            val discordService = new DiscordServiceImpl[IO](config)
+            val apiClient = new ApiClientImp[IO]
+            val route = new Route[IO](discordService, apiClient)
 
-        val apis = Router(
-          "v1" -> route.choreRoute
-        ).orNotFound
+            val apis = Router(
+              "v1" -> route.choreRoute
+            ).orNotFound
 
-        BlazeServerBuilder[IO]
-          .bindHttp(8080, "localhost")
-          .withHttpApp(apis)
-          .resource
-          .use(_ => IO.never)
-          .as(ExitCode.Success)
+            BlazeServerBuilder[IO]
+              .bindHttp(config.port, config.host)
+              .withHttpApp(apis)
+              .resource
+              .use(_ => IO.never)
+              .as(ExitCode.Success)
+          }
+        }
       }
     }
   }

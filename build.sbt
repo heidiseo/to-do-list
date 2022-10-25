@@ -12,6 +12,7 @@ lazy val props = new {
   val logbackVersion = "1.4.0"
   val sttpVersion = "3.7.6"
   val commonsCodecVersion = "1.15"
+  val pureConfigVersion = "0.17.1"
 }
 
 lazy val root = (project in file(".")).settings(
@@ -33,6 +34,8 @@ lazy val root = (project in file(".")).settings(
     "com.softwaremill.sttp.client3" %% "core" % props.sttpVersion,
     "com.softwaremill.sttp.client3" %% "async-http-client-backend-cats" % props.sttpVersion,
     "com.softwaremill.sttp.client3" %% "circe" % props.sttpVersion,
-    "commons-codec" % "commons-codec" % props.commonsCodecVersion
+    "commons-codec" % "commons-codec" % props.commonsCodecVersion,
+    "com.github.pureconfig" %% "pureconfig" % props.pureConfigVersion,
+    "com.github.pureconfig" %% "pureconfig-cats-effect" % props.pureConfigVersion
   )
 )

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id="root [file:/Users/heidiseo/code/to-do-list/]" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
+<module external.linked.project.id="root [file:/Users/heidi.seo/Documents/discord-chore/]" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_14">
     <output url="file://$MODULE_DIR$/../../target/scala-2.13/classes" />
     <output-test url="file://$MODULE_DIR$/../../target/scala-2.13/test-classes" />
@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../../src/main/scala" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/test/scala" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../src/test/resources" type="java-test-resource" />
       <excludeFolder url="file://$MODULE_DIR$/../../target" />
     </content>
     <orderEntry type="inheritedJdk" />
@@ -18,6 +19,11 @@
     <orderEntry type="library" name="sbt: co.fs2:fs2-io_2.13:3.2.4:jar" level="project" />
     <orderEntry type="library" name="sbt: com.chuusai:shapeless_2.13:2.3.7:jar" level="project" />
     <orderEntry type="library" name="sbt: com.comcast:ip4s-core_2.13:3.1.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.github.pureconfig:pureconfig-cats-effect_2.13:0.17.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.github.pureconfig:pureconfig-core_2.13:0.17.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.github.pureconfig:pureconfig-generic-base_2.13:0.17.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.github.pureconfig:pureconfig-generic_2.13:0.17.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.github.pureconfig:pureconfig_2.13:0.17.1:jar" level="project" />
     <orderEntry type="library" name="sbt: com.softwaremill.sttp.client3:async-http-client-backend-cats_2.13:3.7.6:jar" level="project" />
     <orderEntry type="library" name="sbt: com.softwaremill.sttp.client3:async-http-client-backend_2.13:3.7.6:jar" level="project" />
     <orderEntry type="library" name="sbt: com.softwaremill.sttp.client3:cats_2.13:3.7.6:jar" level="project" />
@@ -30,6 +36,7 @@
     <orderEntry type="library" name="sbt: com.sun.activation:jakarta.activation:1.2.2:jar" level="project" />
     <orderEntry type="library" name="sbt: com.twitter:hpack:1.0.2:jar" level="project" />
     <orderEntry type="library" name="sbt: com.typesafe.netty:netty-reactive-streams:2.0.4:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.typesafe:config:1.4.1:jar" level="project" />
     <orderEntry type="library" name="sbt: commons-codec:commons-codec:1.15:jar" level="project" />
     <orderEntry type="library" name="sbt: io.circe:circe-core_2.13:0.15.0-M1:jar" level="project" />
     <orderEntry type="library" name="sbt: io.circe:circe-generic_2.13:0.15.0-M1:jar" level="project" />

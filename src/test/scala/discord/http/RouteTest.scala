@@ -3,7 +3,7 @@ package discord.http
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits.catsSyntaxEitherId
-import discord.model.{DiscordError, DiscordHttpError, DiscordMessage, ResponseMessage}
+import discord.model.{DiscordConfig, DiscordError, DiscordHttpError, DiscordMessage, ResponseMessage}
 import discord.service.{ApiClient, ApiClientImp, DiscordServiceImpl}
 import io.circe.Json
 import io.circe.syntax.EncoderOps
@@ -27,12 +27,14 @@ class RouteTest[F[_]] extends TestSuite {
 
   private val apiClient = new ApiClientImp[IO]
 
-  private val discordServiceSuccessful: DiscordServiceImpl[IO] = new DiscordServiceImpl[IO] {
+  private val config = DiscordConfig.load[IO].unsafeRunSync()
+
+  private val discordServiceSuccessful: DiscordServiceImpl[IO] = new DiscordServiceImpl[IO](config) {
     override def sendMessage(discordMessage: DiscordMessage, apiClient: ApiClient[IO]): IO[Either[DiscordError, ResponseMessage]] =
       IO.pure(ResponseMessage("Message sent to Discord successfully").asRight[DiscordError])
   }
 
-  private val disCordServiceUnavailable: DiscordServiceImpl[IO] = new DiscordServiceImpl[IO] {
+  private val disCordServiceUnavailable: DiscordServiceImpl[IO] = new DiscordServiceImpl[IO](config) {
     override def sendMessage(discordMessage: DiscordMessage, apiClient: ApiClient[IO]): IO[Either[DiscordError, ResponseMessage]] =
       IO.pure(DiscordHttpError("Discord Service Unavailable").asLeft[ResponseMessage])
   }

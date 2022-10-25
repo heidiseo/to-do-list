@@ -3,7 +3,7 @@ package discord.http
 import cats.data.EitherT
 import cats.effect.Async
 import cats.syntax.all._
-import discord.model.{DiscordMessage, IncomingBadRequest}
+import discord.model.{DiscordConfig, DiscordMessage, IncomingBadRequest}
 import discord.service.{ApiClient, DiscordService}
 import io.circe.generic.codec.DerivedAsObjectCodec.deriveCodec
 import org.http4s.circe.CirceInstances
